@@ -253,6 +253,22 @@ RCT_EXPORT_METHOD(signInWithEmailAndPassword
            }];
 }
 
+RCT_EXPORT_METHOD(verifyWithCode
+                  : (FIRApp *)firebaseApp
+                  : (NSString *)code
+                  : (RCTPromiseResolveBlock)resolve
+                  : (RCTPromiseRejectBlock)reject) {
+    [[FIRAuth authWithApp:firebaseApp]
+     verifyWithCode:code
+        completion:^(FIRAuthDataResult *authResult, NSError *error) {
+          if (!error) {
+              resolve(@"");
+          } else {
+              [self promiseRejectAuthException:reject error:error];
+          }
+        }];
+}
+
 RCT_EXPORT_METHOD(signInWithEmailLink
                   : (FIRApp *)firebaseApp
                   : (NSString *)email

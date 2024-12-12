@@ -333,6 +333,10 @@ class FirebaseAuthModule extends FirebaseModule {
       .then(userCredential => this._setUserCredential(userCredential));
   }
 
+  verifyWithCode(code) {
+    return this.native
+      .verifyWithCode(code)
+  }
   signInWithCustomToken(customToken) {
     return this.native
       .signInWithCustomToken(customToken)

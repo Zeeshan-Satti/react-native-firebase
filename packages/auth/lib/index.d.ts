@@ -1808,6 +1808,8 @@ export namespace FirebaseAuthTypes {
      */
     signInWithEmailAndPassword(email: string, password: string): Promise<UserCredential>;
 
+    verifyWithCode(code: string): Promise<UserCredential>;
+
     /**
      * Signs a user in with a custom token.
      *
