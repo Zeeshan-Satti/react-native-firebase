@@ -269,6 +269,16 @@ RCT_EXPORT_METHOD(verifyWithCode
         }];
 }
 
+RCT_EXPORT_METHOD(getCurrentMFAType
+                  : (FIRApp *)firebaseApp
+                  : (RCTPromiseResolveBlock)resolve
+                  : (RCTPromiseRejectBlock)reject) {
+    [[FIRAuth authWithApp:firebaseApp]
+     getCurrentMFATypeWithCompletion:^(NSString *data) {
+        resolve(data);
+     }];
+}
+
 RCT_EXPORT_METHOD(signInWithEmailLink
                   : (FIRApp *)firebaseApp
                   : (NSString *)email
