@@ -38,6 +38,8 @@ import com.google.firebase.FirebaseException;
 import com.google.firebase.FirebaseNetworkException;
 import com.google.firebase.FirebaseTooManyRequestsException;
 import com.google.firebase.auth.ActionCodeResult;
+import com.google.firebase.auth.TotpMultiFactorGenerator;
+import com.google.firebase.auth.TotpMultiFactorAssertion;
 import com.google.firebase.auth.ActionCodeSettings;
 import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.AuthResult;
@@ -107,6 +109,8 @@ class ReactNativeFirebaseAuthModule extends ReactNativeFirebaseModule {
 
   private final HashMap<String, MultiFactorResolver> mCachedResolvers = new HashMap<>();
   private final HashMap<String, MultiFactorSession> mMultiFactorSessions = new HashMap<>();
+
+  private static MultiFactorResolver mfaResolver;
 
   // storage for anonymous phone auth credentials, used for linkWithCredentials
   // https://github.com/invertase/react-native-firebase/issues/4911
@@ -426,8 +430,37 @@ class ReactNativeFirebaseAuthModule extends ReactNativeFirebaseModule {
         .addOnFailureListener(
             exception -> {
               Log.e(TAG, "signInWithEmailAndPassword:onComplete:failure", exception);
+
+              if (exception instanceof FirebaseAuthMultiFactorException) {
+                mfaResolver =  ((FirebaseAuthMultiFactorException) exception).getResolver();
+              }
               promiseRejectAuthException(promise, exception);
             });
+  }
+
+  @ReactMethod
+  private void verifyWithCode(
+    String appName, final String code, final Promise promise) {
+    Log.d(TAG, "verifyWithCode");
+    FirebaseApp firebaseApp = FirebaseApp.getInstance(appName);
+    FirebaseAuth firebaseAuth = FirebaseAuth.getInstance(firebaseApp);
+    TotpMultiFactorAssertion assertion = TotpMultiFactorGenerator.getAssertionForSignIn(
+      mfaResolver.getHints().get(0).getUid(),
+      code
+    );
+
+    mfaResolver.resolveSignIn(assertion)
+      .addOnSuccessListener(
+        authResult -> {
+          Log.d(TAG, "signInWithEmailAndPassword:onComplete:success");
+          mfaResolver = null;
+          promiseWithAuthResult(authResult, promise);
+        })
+      .addOnFailureListener(
+        exception -> {
+          Log.e(TAG, "signInWithEmailAndPassword:onComplete:failure", exception);
+          promiseRejectAuthException(promise, exception);
+        });
   }
 
   /**
@@ -900,6 +933,9 @@ class ReactNativeFirebaseAuthModule extends ReactNativeFirebaseModule {
                 } else {
                   Exception exception = task.getException();
                   Log.e(TAG, "signInWithCredential:onComplete:failure", exception);
+                  if (exception instanceof FirebaseAuthMultiFactorException) {
+                    mfaResolver =  ((FirebaseAuthMultiFactorException) exception).getResolver();
+                  }
                   promiseRejectAuthException(promise, exception);
                 }
               });
