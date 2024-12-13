@@ -1810,6 +1810,8 @@ export namespace FirebaseAuthTypes {
 
     verifyWithCode(code: string): Promise<UserCredential>;
 
+    getCurrentMFAType(): Promise<string>;
+
     /**
      * Signs a user in with a custom token.
      *
